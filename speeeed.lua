@@ -508,10 +508,10 @@ local function farmOnce()
     wentBelowCheckY = false
 
     while running do
-        -- 🔄 СНАЧАЛА проверяем рестарт — выходим ДО бомбы
+        -- СНАЧАЛА проверка рестарта — выход БЕЗ телепорта
         if wasTeleportedToTop() then
             print("[Magnus] РЕСТАРТ! Завершаем цикл фарма (без телепорта)")
-            return true  -- выход БЕЗ телепорта
+            return true
         end
 
         local y = findHighestYInColumn()
@@ -527,10 +527,10 @@ local function farmOnce()
             for z = startZ, region.Max.Z - 1, STEP do
                 if not running then break end
 
-                -- 🔄 Проверка ПЕРЕД телепортом к блоку
+                -- Проверка ПЕРЕД телепортом к блоку
                 if wasTeleportedToTop() then
                     print("[Magnus] РЕСТАРТ перед блоком — выходим")
-                    return true  -- выход БЕЗ телепорта
+                    return true
                 end
 
                 local block = world:GetBlock(Vector3int16.new(x, y, z))
@@ -539,7 +539,7 @@ local function farmOnce()
                     teleportToGrid(x, y, z)
                     task.wait(TP_SETTLE)
 
-                    -- 🔄 Проверка ПОСЛЕ телепорта (перед бомбой)
+                    -- Проверка ПОСЛЕ телепорта (перед бомбой)
                     if wasTeleportedToTop() then
                         print("[Magnus] РЕСТАРТ после телепорта — выходим")
                         return true
@@ -577,8 +577,6 @@ if spot then
     task.wait(PRE_FARM_WAIT)
 
     while running do
-        local worldBefore = BlockWorldClient.GetLocal()
-
         local ok, err = pcall(farmOnce)
         if not ok then
             warn("[Magnus] Ошибка в farmOnce:", err)
@@ -586,34 +584,40 @@ if spot then
         end
 
         if running then
-    -- 🔄 Только ПОСЛЕ выхода из farmOnce — телепорт наверх
-    print("[Magnus] Цикл завершён. Возврат наверх...")
-    teleportTo(PRE_FARM_TP)
+            -- ТОЛЬКО ПОСЛЕ выхода из farmOnce — телепорт наверх
+            print("[Magnus] Цикл завершён. Возврат наверх...")
+            teleportTo(PRE_FARM_TP)
 
-    -- Ждём готовности шахты
-    task.wait(20)
+            -- Ждём готовности шахты
+            task.wait(20)
 
-    print("[Magnus] Ждём появления блоков...")
-    local attempts = 0
-    repeat
-        task.wait(0.5)
-        attempts = attempts + 1
-        local w = BlockWorldClient.GetLocal()
-        if w then
-            local r = w:GetRegion()
-            local sx = r.Min.X + 1
-            local sz = r.Min.Z + 1
-            local hasBlock = false
-            for checkY = r.Max.Y, r.Min.Y, -1 do
-                if w:GetBlock(Vector3int16.new(sx, checkY, sz)) then
-                    hasBlock = true
-                    break
+            print("[Magnus] Ждём появления блоков...")
+            local attempts = 0
+            repeat
+                task.wait(0.5)
+                attempts = attempts + 1
+                local w = BlockWorldClient.GetLocal()
+                if w then
+                    local r = w:GetRegion()
+                    local sx = r.Min.X + 1
+                    local sz = r.Min.Z + 1
+                    local hasBlock = false
+                    for checkY = r.Max.Y, r.Min.Y, -1 do
+                        if w:GetBlock(Vector3int16.new(sx, checkY, sz)) then
+                            hasBlock = true
+                            break
+                        end
+                    end
+                    if hasBlock then break end
                 end
-            end
-            if hasBlock then break end
-        end
-    until attempts > 120
+            until attempts > 120
 
-    print("[Magnus] Новая шахта готова — начинаем новый цикл")
-    task.wait(2)
+            print("[Magnus] Новая шахта готова — начинаем новый цикл")
+            task.wait(2)
+        end
+    end
+
+    print("[Magnus] Остановлено пользователем (клавиша T)")
+else
+    warn("[Magnus] PlaceId " .. game.PlaceId .. " не найден в WORLD_SPOTS")
 end
