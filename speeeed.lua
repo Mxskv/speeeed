@@ -567,19 +567,21 @@ if spot then
         end
 
         if running then
-            print("[Magnus] Цикл завершён. Возврат наверх, ждём новую шахту...")
-            teleportTo(PRE_FARM_TP)
+    print("[Magnus] Цикл завершён. Возврат в начало...")
+    -- Детект возвращает в точку входа (даже если игра кинула в другое место)
+    teleportTo(PRE_FARM_TP)
+    task.wait(0.5)
 
-            -- ⏱️ Ждём, пока игра заменит мир (старый объект ~= новый объект)
-            local attempts = 0
-            repeat
-                task.wait(0.5)
-                local currentWorld = BlockWorldClient.GetLocal()
-                attempts = attempts + 1
-            until (currentWorld and currentWorld ~= worldBefore) or attempts > 120
+    -- ⏱️ Ждём, пока игра заменит мир
+    local attempts = 0
+    repeat
+        task.wait(0.5)
+        local currentWorld = BlockWorldClient.GetLocal()
+        attempts = attempts + 1
+    until (currentWorld and currentWorld ~= worldBefore) or attempts > 120
 
-            print("[Magnus] Новая шахта загружена — начинаем новый цикл")
-            task.wait(2)
+    print("[Magnus] Новая шахта загружена — начинаем новый цикл")
+    task.wait(2)
         end
     end
 
